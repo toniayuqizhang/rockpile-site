@@ -15,7 +15,7 @@ let hoveredIndex = -1;
 let pendingTimestamp = "";
 let pendingShape = null;
 
-const API_URL = "http://localhost:3000"; // change if deployed
+const API_URL = "https://rockpile-backend.onrender.com";
 
 function setup() {
     createCanvas(windowWidth, windowHeight);
