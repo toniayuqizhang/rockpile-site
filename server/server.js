@@ -3,8 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { getDatabase } = require('./firebase-config');
-const { ref, get, push } = require('firebase/database'); // <-- ✅ THIS LINE
-
+const { ref, get, push } = require('firebase/database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -44,6 +43,6 @@ app.post('/rocks', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
-
-
+app.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
+});
