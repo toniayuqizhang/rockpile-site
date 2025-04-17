@@ -138,34 +138,48 @@ function shapeHash(shape) {
     return shape.map(p => `${Math.round(p.x)},${Math.round(p.y)}`).join('|');
 }
 
+
 function fetchRocks() {
+    const todayStr = getLocalDateString();
+    let rocksTodayCount = 0;
+
     fetch(`${API_URL}/rocks`)
         .then(res => res.json())
         .then(data => {
             for (let item of data) {
                 const shape = item.shape;
                 const hash = shapeHash(shape);
+                const rockDateStr = getLocalDateString(new Date(item.timestamp));
 
-                if (!seenHashes.has(hash) && !justSentHashes.has(hash)) {
-                    const centroidX = shape.reduce((sum, v) => sum + v.x, 0) / shape.length;
-                    const centroidY = shape.reduce((sum, v) => sum + v.y, 0) / shape.length;
-                    const body = Bodies.fromVertices(centroidX, centroidY, [shape], {
-                        restitution: 0.008, friction: 1.8, density: 1.9,
-                    });
+                if (rockDateStr === todayStr) {
+                    rocksTodayCount++;
 
-                    if (body && body.vertices) {
-                        World.add(world, body);
-                        shapes.push(body);
-                        rockAlphas.push(255);
-                        thoughtAlphas.push(255);
-                        thoughts.push({ message: item.thought, timestamp: item.timestamp });
-                        seenHashes.add(hash);
+                    if (!seenHashes.has(hash) && !justSentHashes.has(hash)) {
+                        const centroidX = shape.reduce((sum, v) => sum + v.x, 0) / shape.length;
+                        const centroidY = shape.reduce((sum, v) => sum + v.y, 0) / shape.length;
+                        const body = Bodies.fromVertices(centroidX, centroidY, [shape], {
+                            restitution: 0.008, friction: 1.8, density: 1.9,
+                        });
+
+                        if (body && body.vertices) {
+                            World.add(world, body);
+                            shapes.push(body);
+                            rockAlphas.push(255);
+                            thoughtAlphas.push(255);
+                            thoughts.push({ message: item.thought, timestamp: item.timestamp });
+                            seenHashes.add(hash);
+                        }
                     }
                 }
             }
+
+            console.log(`✅ Loaded ${rocksTodayCount} rocks for today (${todayStr})`);
         })
         .catch(console.error);
 }
+
+
+
 
 function drawThoughtGrid() {
     let spacingY = 120;
@@ -295,12 +309,21 @@ Number.prototype.pad = function(n) {
 
 
 
-  let currentDateStr = getDateString();
+  let currentDateStr = getLocalDateString();
 
-function getDateString() {
-  const now = new Date();
-  return now.toISOString().split("T")[0]; // "YYYY-MM-DD"
-}
+
+  function getLocalDateString(date = new Date()) {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+
+
+
+
+
 
 function clearRocksForNewDay() {
   // Clear Matter.js bodies from world
@@ -316,7 +339,7 @@ function clearRocksForNewDay() {
 }
 
 function checkForNewDay() {
-  const newDateStr = getDateString();
+  const newDateStr = getLocalDateString();
   if (newDateStr !== currentDateStr) {
     currentDateStr = newDateStr;
     clearRocksForNewDay();
@@ -325,3 +348,11 @@ function checkForNewDay() {
 
 // Check every minute (60000 ms)
 setInterval(checkForNewDay, 60000);
+
+//new code to manually clear the rocks
+// document.addEventListener("keydown", function (event) {
+//     if (event.ctrlKey && event.shiftKey && event.code === "KeyC") {
+//       console.log("🧼 Manual clear triggered.");
+//       clearRocksForNewDay();
+//     }
+//   });
